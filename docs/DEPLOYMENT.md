@@ -1,0 +1,23 @@
+# Development and Google deployment
+
+## Cloud development
+
+Use the existing `/workspace/Installment-App` checkout. Tasks already have isolation; do not create a worktree unless explicitly requested. Install with `npm ci`, validate with `npm test && npm run build`, and start with `npm run dev -- --port 5173`. Processes must be restarted in a new task. A local request should return the Qist HTML; browser acceptance is `npm run test:browser` with a Chromium installation. No additional database, secret, or Google account is required for synthetic local mode.
+
+## Apps Script foundation (administrator validation only)
+
+1. Use a Google Workspace organization. Read the identity/access risk in ARCHITECTURE.md first. **Do not deploy this phase for staff or real financial use.** Execute-as-user identity grants direct resource access; meeting the no-direct-Sheets-access requirement needs a trusted gateway and protected service identity in a later phase. Consumer Google accounts and custom email/password flows are not supported by this foundation.
+2. Run `npm ci && npm run build`.
+3. Create a standalone Apps Script project in your Workspace account. Enable display of the manifest in Project Settings. Copy the contents of each `.gas-build/*.gs`, `Index.html`, and `appsscript.json` to matching Apps Script files. Keep the project and database private. Optional clasp workflow: use the official `@google/clasp` package, `clasp login` locally with your account, configure a local ignored `.clasp.json` with `scriptId` and `rootDir: ".gas-build"`, then push after reviewing the exact generated files. Never commit OAuth credentials. Do not authenticate or publish on someone else's behalf without authorization.
+4. As the initial owner, run `setup_` from the editor and authorize Google Sheets/Drive/email scopes. To attach an existing ERP database/root, set `ERP_SPREADSHEET_ID` / `ERP_FOLDER_ID` in Script Properties before setup. Use only matching schema; setup fails on mismatches. Never attach an unrelated production spreadsheet.
+5. Setup creates missing tables and restricted Drive root/subfolders, initializes settings/schema metadata and establishes ownership from the authenticated editor. It preserves records, creates no demo data, and reruns without duplicate folders or ownership reset. Child folders inherit the root; inspect explicit collaborators/Drive access in the actual account. No trigger is created for services that have not been implemented. Moving the spreadsheet into the Drive database folder is optional and manual.
+6. Deploy as Web App with **execute as user accessing the web app**, and organization-only access. Do not choose anonymous access or execute-as-owner to bypass identity errors. An unavailable active email is an access denial.
+7. On first access the active owner may view the empty dashboard and register customers. Every API operation authenticates and checks server permissions. Direct calls to unknown actions are rejected. Server contract activation, payment posting and exports are disabled. Existing future server contract/payment rows are not surfaced by this initial bootstrap.
+8. Validate in the real Workspace: owner succeeds; another unregistered account fails; inactive/unknown-role users fail; STAFF role fails with the documented deployment gate; setup twice preserves customer rows; duplicate CNIC rejected; new customer appears in Sheets immediately; formula-leading text stored safely; mismatched headers fail closed; Drive root has restricted sharing.
+9. Update by rebuilding and replacing generated source, creating a new deployment version and selecting it in Manage Deployments. Test in a separate staging spreadsheet first. Do not reset production data. Keep earlier deployment versions and a validated backup before migrations.
+
+Google account authentication, recovery and MFA are managed through Google Workspace, not app-stored passwords. Invitations and lifecycle administration currently use the Workspace administrator. Domain deployment, permissions, underlying Google services and quotas require real-account validation; a local syntax check does not validate them.
+
+## Subsequent acceptance gates
+
+Before real financial use: implement and test protected staff storage/identity, full CRUD and immutable contract snapshots, multi-product activation, financial journal commit/recovery, ledger reconstruction, idempotency/payload conflict, concurrent payment/reversal, secure receipts/documents, server-side report/export permission, schema migration, trigger management, verified backups with attachment manifests and restore preview. The schema reserves these entities but does not claim their services exist.

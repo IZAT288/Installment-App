@@ -1,0 +1,25 @@
+{
+  "name": "installment-erp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build && node scripts/package-gas.mjs",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "playwright test"
+  },
+  "dependencies": {
+    "@fontsource-variable/dm-sans": "^5.3.0",
+    "@fontsource-variable/manrope": "^5.3.0",
+    "lucide-react": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@playwright/test": "latest",
+    "@vitejs/plugin-react": "latest",
+    "vite": "latest"
+  }
+}
