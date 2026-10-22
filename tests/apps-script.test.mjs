@@ -69,3 +69,47 @@ test("customer service rechecks authorization before touching storage", () => {
     /Permission denied/,
   );
 });
+
+test("server permits optional and unrestricted CNIC while retaining other required fields", () => {
+  const c = context(),
+    rows = [];
+  c.LockService = {
+    getScriptLock: () => ({ waitLock() {}, releaseLock() {} }),
+  };
+  c.PropertiesService = {
+    getScriptProperties: () => ({ getProperty: () => 0, setProperty() {} }),
+  };
+  c.Utilities = { getUuid: () => `uuid-${rows.length}` };
+  c.repository_ = () => ({
+    findMany: () => rows,
+    create: (_, row) => {
+      rows.push(row);
+      return row;
+    },
+  });
+  c.audit_ = () => {};
+  const user = { role: "ADMIN", email: "admin@example.test" };
+  for (const cnic of ["", "not-a-formatted-id", "not-a-formatted-id"])
+    c.createCustomer_(user, {
+      name: "Test",
+      father: "Father",
+      address: "Peshawar",
+      phone: "03001234567",
+      cnic,
+    });
+  assert.deepEqual(
+    rows.map((r) => r.cnic),
+    ["", "not-a-formatted-id", "not-a-formatted-id"],
+  );
+  assert.throws(
+    () =>
+      c.createCustomer_(user, {
+        name: "Test",
+        father: "Father",
+        address: "",
+        phone: "03001234567",
+        cnic: "",
+      }),
+    /Required customer/,
+  );
+});

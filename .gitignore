@@ -4,3 +4,7 @@ dist/
 playwright-report/
 test-results/
 .clasp.json
+
+.env
+.env.*
+!.env.example

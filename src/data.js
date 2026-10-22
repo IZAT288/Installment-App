@@ -1,4 +1,4 @@
-import { plan, allocate } from "./finance";
+import { plan, allocate } from "./finance.js";
 export const today = () =>
   new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Karachi",
@@ -84,21 +84,17 @@ const initialSeed = () => ({
       min: 3,
     },
   ],
-  contracts: names
-    .slice(0, 6)
-    .map((_, i) => ({
-      id: `CON-${String(i + 1).padStart(6, "0")}`,
-      customer: `CUS-${String(i + 1).padStart(6, "0")}`,
-      product: ["Haier Inverter AC", "Samsung Galaxy A56", "Honda CD 70"][
-        i % 3
-      ],
-      cash: 10000000 + i * 1500000,
-      down: 2000000,
-      count: 12,
-      date: today(),
-      ...plan(10000000 + i * 1500000, 2000000, 12, seedDate(i)),
-      status: "Active",
-    })),
+  contracts: names.slice(0, 6).map((_, i) => ({
+    id: `CON-${String(i + 1).padStart(6, "0")}`,
+    customer: `CUS-${String(i + 1).padStart(6, "0")}`,
+    product: ["Haier Inverter AC", "Samsung Galaxy A56", "Honda CD 70"][i % 3],
+    cash: 10000000 + i * 1500000,
+    down: 2000000,
+    count: 12,
+    date: today(),
+    ...plan(10000000 + i * 1500000, 2000000, 12, seedDate(i)),
+    status: "Active",
+  })),
   payments: [],
   audit: [],
   settings: {
@@ -151,16 +147,12 @@ export function saveDemo(data) {
 }
 export function customerInput(data, existing) {
   const name = data.name.trim(),
-    cnic = data.cnic.trim(),
+    cnic = String(data.cnic || "").trim(),
     phone = data.phone.replace(/[\s-]/g, "").replace(/^\+92/, "0");
   if (!name || !data.father.trim() || !data.address.trim())
     throw new Error("Name, father’s name and address are required.");
-  if (!/^\d{5}-\d{7}-\d$/.test(cnic))
-    throw new Error("Use CNIC format 12345-1234567-1.");
   if (!/^03\d{9}$/.test(phone))
     throw new Error("Use a valid Pakistani mobile number.");
-  if (existing.some((c) => c.cnic === cnic))
-    throw new Error("A customer with this CNIC already exists.");
   return { ...data, name, cnic, phone, status: "Active" };
 }
 export function receive(data, input) {

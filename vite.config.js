@@ -6,7 +6,11 @@ export default defineConfig({
     assetsInlineLimit: 1000000,
     cssCodeSplit: false,
     rollupOptions: {
-      output: { entryFileNames: "app.js", assetFileNames: "[name][extname]" },
+      output: {
+        codeSplitting: false,
+        entryFileNames: "app.js",
+        assetFileNames: "[name][extname]",
+      },
     },
   },
 });

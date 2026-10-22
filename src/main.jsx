@@ -54,6 +54,8 @@ import { plan, minor } from "./finance";
 import "@fontsource-variable/dm-sans";
 import "@fontsource-variable/manrope";
 import "./styles.css";
+import AuthScreen from "./AuthScreen";
+import ReceiptActions from "./ReceiptActions";
 const navGroups = [
   [
     "WORKSPACE",
@@ -96,6 +98,23 @@ const initials = (name) =>
 const outstanding = (c) =>
   c.schedule.reduce((s, r) => s + r.amount - r.paid, 0);
 function App() {
+  const [demoOpen, setDemoOpen] = useState(
+    () =>
+      sessionStorage.getItem("qist-demo-open") === "true" &&
+      !["#/login", "#/register", "#/forgot-password"].includes(location.hash),
+  );
+  function openDemo() {
+    sessionStorage.setItem("qist-demo-open", "true");
+    location.hash = "/demo";
+    setDemoOpen(true);
+  }
+  function exitDemo() {
+    sessionStorage.removeItem("qist-demo-open");
+    location.hash = "/login";
+    setDemoOpen(false);
+    setProfile(false);
+    setModal(null);
+  }
   const [data, setData] = useState(() => (isGas() ? null : loadDemo())),
     [error, setError] = useState(""),
     [page, setPage] = useState("Dashboard"),
@@ -211,6 +230,14 @@ function App() {
     URL.revokeObjectURL(a.href);
     setToast("Payment report exported.");
   }
+  if (!isGas() && !demoOpen)
+    return (
+      <AuthScreen
+        onDemo={openDemo}
+        theme={theme}
+        onTheme={() => setTheme(theme === "light" ? "dark" : "light")}
+      />
+    );
   if (error)
     return (
       <div className="access-error">
@@ -416,6 +443,11 @@ function App() {
                   >
                     Workspace settings <Settings size={15} />
                   </button>
+                  {!isGas() && (
+                    <button className="exit-demo" onClick={exitDemo}>
+                      <LogOut size={15} /> Exit demo / sign in
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -760,7 +792,9 @@ function App() {
                       <td>
                         {c.phone}
                         <small className="cell-sub">
-                          CNIC •••••-•••••••-{c.cnic.slice(-1)}
+                          {c.cnic
+                            ? `CNIC •••••-•••••••-${c.cnic.slice(-1)}`
+                            : "CNIC not provided"}
                         </small>
                       </td>
                       <td>{c.address}</td>
@@ -1308,9 +1342,15 @@ function App() {
                 ))}
               </dl>
               <p>Thank you for your payment. No late fees are charged.</p>
-              <button className="btn primary" onClick={() => window.print()}>
-                <Printer size={16} /> Print / save PDF
-              </button>
+              <ReceiptActions
+                payment={modal.payment}
+                customer={
+                  customers.find((c) => c.id === modal.payment.customer) || {
+                    name: customerName(modal.payment.customer),
+                  }
+                }
+                business={data.settings}
+              />
             </div>
           )}
         </Modal>
@@ -1683,17 +1723,17 @@ function CustomerForm({ onSubmit }) {
       }}
     >
       <p className="form-intro">
-        A new relationship starts here. Fields below are required.
+        A new relationship starts here. CNIC is optional and has no required
+        format.
       </p>
       <div className="form-grid">
         <Field label="Full name" name="name" required maxLength={100} />
         <Field label="Father’s name" name="father" required maxLength={100} />
         <Field
-          label="CNIC number"
+          label="CNIC number (optional)"
           name="cnic"
-          placeholder="12345-1234567-1"
-          required
-          pattern="[0-9]{5}-[0-9]{7}-[0-9]"
+          placeholder="Enter CNIC, if available"
+          maxLength={100}
         />
         <Field
           label="Mobile number"

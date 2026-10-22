@@ -13,6 +13,7 @@ test("dashboard is responsive, theme persists, navigation and search work", asyn
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
+  await page.getByRole("button", { name: "Explore local demo" }).click();
   await expect(
     page.getByRole("heading", { name: "A clearer view. A better business." }),
   ).toBeVisible();
@@ -25,7 +26,10 @@ test("dashboard is responsive, theme persists, navigation and search work", asyn
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.locator("html")).toHaveCSS("background-color", "rgb(17, 27, 24)");
+  await expect(page.locator("html")).toHaveCSS(
+    "background-color",
+    "rgb(17, 27, 24)",
+  );
   await expect(page.locator("h1")).toHaveCSS("color", "rgb(225, 236, 229)");
   await page.screenshot({
     path: `/tmp/qist-${testInfo.project.name}-dark.png`,
@@ -47,6 +51,7 @@ test("register customer, create exact plan, collect payment and view receipt", a
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "Explore local demo" }).click();
   await navigate(page, "Customers");
   await page.getByRole("button", { name: "Add customer", exact: true }).click();
   let dialog = page.getByRole("dialog");
@@ -57,18 +62,6 @@ test("register customer, create exact plan, collect payment and view receipt", a
   await dialog.getByLabel("Complete address").fill("Peshawar");
   await dialog.getByRole("button", { name: "Register customer" }).click();
   await expect(page.getByRole("cell", { name: "Test Customer" })).toBeVisible();
-  await page.getByRole("button", { name: "Add customer", exact: true }).click();
-  dialog = page.getByRole("dialog");
-  await dialog.getByLabel("Full name").fill("Duplicate");
-  await dialog.getByLabel("Father’s name").fill("Test");
-  await dialog.getByLabel("CNIC number").fill("12345-1234567-1");
-  await dialog.getByLabel("Mobile number").fill("03001234567");
-  await dialog.getByLabel("Complete address").fill("Peshawar");
-  await dialog.getByRole("button", { name: "Register customer" }).click();
-  await expect(dialog.getByRole("alert")).toHaveText(
-    "A customer with this CNIC already exists.",
-  );
-  await page.keyboard.press("Escape");
   await navigate(page, "Contracts");
   await page.getByRole("button", { name: "New contract" }).click();
   dialog = page.getByRole("dialog");
